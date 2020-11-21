@@ -10,9 +10,9 @@ We took the pytorch image prediction and created rest-api for it using python-fl
 
 * AIZOOTECH published 7959 images to train the models. The dataset is composed of [WIDER Face](http://shuoyang1213.me/WIDERFACE/) and [MAFA](http://www.escience.cn/people/geshiming/mafa.html), they verified and fixed some wrong annotations that exist in the original datasets. The datasets can be downloaded from [Google drive](https://drive.google.com/file/d/1QspxOJMDf_rAWVV7AU_Nc0rjo1_EPEDW/view?usp=sharing)
 
-This is written specifically for Raspberry Pi 4 but should work with any other system as well, other systems might need to follow different way of installing the depndenicies.
+This is written specifically for Raspberry Pi 4 but should work with any other system as well, other systems might need to follow different way of installing the dependencies.
 
-## Installing virtual environment
+## Setting up virtual environment
 
 You might want to consider to install all the packages in virtual environment just to prevent any issues that might happen during installation, to do so install virtual environment by running:
 
@@ -52,7 +52,7 @@ Install requirements for numpy:
 sudo apt install libatlas-base-dev
 ```
 
-Downgrade GCC and G++ due to compability issues with Raspberry 4:
+Downgrade GCC and G++ due to compatibility issues with Raspberry 4:
 
 ```
 sudo apt-get install gcc-4.9 g++-4.9
