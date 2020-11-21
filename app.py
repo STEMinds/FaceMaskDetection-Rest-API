@@ -10,7 +10,12 @@ from utils.anchor_decode import decode_bbox
 from utils.nms import single_class_non_max_suppression
 from load_model.pytorch_loader import load_pytorch_model, pytorch_inference
 from flask import Flask,request,jsonify
+import warnings
 
+# Ignore SourceChangeWarning
+warnings.filterwarnings("ignore")
+
+# initialize flask app
 app = Flask(__name__)
 
 # model = load_pytorch_model('models/face_mask_detection.pth');
