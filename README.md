@@ -1,97 +1,95 @@
-# FaceMaskDetection
-[中文版](README-zh.md) | English version
-
-### We open source all the popular deep learning frameworks' model and inference code to do face mask detection.
-
- - [x] PyTorch
-- [x] TensorFlow（include tflite and pb model）
-- [x] Keras
-- [x] MXNet
-- [x] Caffe
-
-
-
-** Detect faces and determine whether they are  wearing mask. **
-
-
-** First of all, we hope the people in the world defeat COVID-2019 as soon as possible. Stay strong, all the countries in the world.**
-
-
-* We make face mask detection models with five mainstream deep learning frameworks （PyTorch、TensorFlow、Keras、MXNet和caffe） open sourced, and the corresponding inference codes. 
-
-* We published 7959 images to train the models. The dataset is composed of [WIDER Face](http://shuoyang1213.me/WIDERFACE/) and [MAFA](http://www.escience.cn/people/geshiming/mafa.html), we verified some wrong annotations.  You can download here from [Google drive](https://drive.google.com/file/d/1QspxOJMDf_rAWVV7AU_Nc0rjo1_EPEDW/view?usp=sharing), if you can not visit Google, you can download it from BaiduDisk, click [here to know how to download](README-zh.md).
-
-
+# FaceMaskDetection-Rest-API
 
 ![](img/demo.png)
 
+Original face mask detection is by [AIZOOTech](https://github.com/AIZOOTech/FaceMaskDetection)
 
-We deployed a web page, you can click the link to experience it.
-The page is writen by Tensorflow.js.
+AIZOOTECH provided ready made models to detect face masks on pictures and videos with high accuracy.
 
-[AIZOO face mask detection](https://demo.aizoo.com/face-mask-detection.html)
-## Model structure
+We took the pytorch image prediction and created rest-api for it using python-flask which can be used to query images from embedded devices and used for cool projects either locally or on the cloud.
 
-We used the structure of SSD. However,  in order to  make it run quickly in the browser, the backbone network is lite. The total model only has 1.01M parametes.
+* AIZOOTECH published 7959 images to train the models. The dataset is composed of [WIDER Face](http://shuoyang1213.me/WIDERFACE/) and [MAFA](http://www.escience.cn/people/geshiming/mafa.html), they verified and fixed some wrong annotations that exist in the original datasets. The datasets can be downloaded from [Google drive](https://drive.google.com/file/d/1QspxOJMDf_rAWVV7AU_Nc0rjo1_EPEDW/view?usp=sharing)
 
-Input size of the model is 260x260, the backbone network only has 8 conv layers. The total model has only 24 layers with the  location and classification layers counted.
+This is written specifically for Raspberry Pi 4 but should work with any other system as well, other systems might need to follow different way of installing the depndenicies.
 
-SSD anchor configurtion is show bellow:
+## Installing virtual environment
 
-| multibox layers | feature map size | anchor size | aspect ratio）|
-| ---- | ---- | ---- | ---- |
-|First|33x33|0.04,0.056|1,0.62,0.42|
-Second ||17x17|0.08,0.11|1,0.62,0.42|
-|Third|9x9|0.16,0.22|1,0.62,0.42|
-|Forth |5x5|0.32,0.45|1,0.62,0.42|
-|Fifth|3x3|0.64,0.72|1,0.62,0.42|
+You might want to consider to install all the packages in virtual environment just to prevent any issues that might happen during installation, to do so install virtual environment by running:
 
-## How to run
-### pytorch
-on image：
 ```
-python pytorch_infer.py  --img-path /path/to/your/img
+pip3 install virtualenv
 ```
-on video：
+
+Then create the virtual environment by running the following outside the cloned folder:
+
 ```
-python pytorch_infer.py --img-mode 0 --video-path /path/to/video  
-# If you want to run with camera video, set  video_path to be 0
-python pytorch_infer.py --img-mode 0 --video-path 0
+python3 -m virtualenv face_mask
 ```
-### TensorFlow/Keras/MXNet/Caffe
-The other four frameworks running method is similar to pytorch, just replace `pytorch`with `tensorflow`, `keras`,`caffe`，`mxnet`,
-if you want to use tensorflow, just run:
+
+To activate run:
+
 ```
-python tensorflow_infer.py  --img-path /path/to/your/img
+source face_mask/bin/activate
 ```
-**Attention，for caffe's inference ，we use permute layer，so that we should use [caffe-ssd](https://github.com/weiliu89/caffe/tree/ssd)**，you can use opencv-dnn to do the inference.
-## Appendix
-### Feedback
-If you use wechat, you can follow us.
 
-![](img/wx.png)
+## Installing dependencies
 
-** If you use Wechat, scan the code to add  me on wechat **
+Install requirements for Pillow first:
 
-![](img/author.jpg)
+```
+sudo apt-get install libjpeg-dev zlib1g-dev
+```
 
+Install requirements for pytorch:
 
-### Model structure
+```
+sudo apt install libopenblas-dev libblas-dev m4 cmake cython python3-dev python3-yaml python3-setuptools
+```
 
-We merge the BN to Conv layers in order to accelerate the inference speed.
+Install requirements for numpy:
 
-![](img/face_mask_detection.caffemodel.png)
+```
+sudo apt install libatlas-base-dev
+```
 
-### Testset PR curve
+Downgrade GCC and G++ due to compability issues with Raspberry 4:
 
+```
+sudo apt-get install gcc-4.9 g++-4.9
+```
 
-![](img/pr_curve.png)
+Set environment variables:
 
+```
+export CC=gcc-4.9
+export CXX=g++-4.9
+export USE_CUDA=0
+export USE_MKLDNN=0
+export USE_NNPACK=0
+export USE_QNNPACK=0
+export USE_NUMPY=1
+export USE_DISTRIBUTED=0
+export NO_CUDA=1
+export NO_DISTRIBUTED=1
+export NO_MKLDNN=1
+export NO_NNPACK=1
+export NO_QNNPACK=1
+export ONNX_ML=1
+```
 
+Run the following commands to install the dependencies:
 
+```
+pip3 install opencv-python3
+pip3 install numpy
+pip3 install pillow
+```
 
-### Our demo page
+Download and install pytorch:
 
-[aizoo.com face mask detection demo](https://demo.aizoo.com/face-mask-detection.html)
-
-![](img/facemask.gif)
+```
+git clone --recursive https://github.com/pytorch/pytorch
+cd pytorch
+sudo -E python3 setup.py build
+sudo -E python3 setup.py install
+```
