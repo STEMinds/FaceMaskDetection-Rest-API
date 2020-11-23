@@ -11,6 +11,7 @@ from utils.nms import single_class_non_max_suppression
 from load_model.pytorch_loader import load_pytorch_model, pytorch_inference
 from flask import Flask,request,jsonify
 import warnings
+import uuid
 
 # Ignore SourceChangeWarning
 warnings.filterwarnings("ignore")
@@ -33,15 +34,14 @@ anchors = generate_anchors(feature_map_sizes, anchor_sizes, anchor_ratios)
 # so we expand dim for anchors to [1, anchor_num, 4]
 anchors_exp = np.expand_dims(anchors, axis=0)
 
-id2class = {1: 'Mask', 0: 'NoMask'}
+id2class = {1: 'NoMask', 0: 'Mask'}
 
 
 def inference(image,
               conf_thresh=0.5,
               iou_thresh=0.4,
-              target_shape=(160, 160),
-              draw_result=True,
-              show_result=True
+              target_shape=(360, 360),
+              draw_result=True
               ):
     '''
     Main function of detection inference
@@ -53,11 +53,13 @@ def inference(image,
     :param show_result: whether to display the image.
     :return:
     '''
-    # image = np.copy(image)
+
+    #copy = np.array(image)
     output_info = []
     height, width, _ = image.shape
+    image = cv2.cvtColor(np.array(image), cv2.COLOR_BGR2RGB)
     image_resized = cv2.resize(image, target_shape)
-    image_np = image_resized / 255.0  # 归一化到0~1
+    image_np = image_resized / 250.0  # 归一化到0~1
     image_exp = np.expand_dims(image_np, axis=0)
 
     image_transposed = image_exp.transpose((0, 3, 1, 2))
@@ -91,14 +93,23 @@ def inference(image,
             if class_id == 0:
                 color = (0, 255, 0)
             else:
-                color = (255, 0, 0)
+                color = (0, 0, 255)
             cv2.rectangle(image, (xmin, ymin), (xmax, ymax), color, 2)
             cv2.putText(image, "%s: %.2f" % (id2class[class_id], conf), (xmin + 2, ymin - 30),cv2.FONT_HERSHEY_SIMPLEX, 0.8, color)
-            cv2.putText(image, "Body temperature: 36.6c", (xmin + 2, ymax + 30),cv2.FONT_HERSHEY_SIMPLEX, 0.8, color)
-        output_info.append([class_id, conf, xmin, ymin, xmax, ymax])
+            #cv2.putText(image, "Body temperature: 36.6c", (xmin + 2, ymax + 30),cv2.FONT_HERSHEY_SIMPLEX, 0.8, color)
+            mask = bool(int(class_id) == 1)
+            output_info.append([mask, conf, xmin, ymin, xmax, ymax])
 
-    if show_result:
-        Image.fromarray(image).show()
+    if draw_result:
+        # save image and provide it in the api
+        image = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
+        im = Image.fromarray(image)
+        id = uuid.uuid4()
+        image_path = "predictions/%s.jpg" % id
+        im.save(image_path)
+
+        return output_info,image_path
+
     return output_info
 
 
@@ -146,20 +157,18 @@ def predict():
     if request.method == 'POST':
         img = Image.open(request.files['file'])
         img = np.array(img)
-        img = cv2.resize(img,(360,360))
-        img = cv2.cvtColor(np.array(img), cv2.COLOR_BGR2RGB)
         # get prediction
-        prediction = inference(img, show_result=False, target_shape=(360, 360))
+        prediction,image_path = inference(img, target_shape=(360, 360))
         profiles = []
         for face in prediction:
-            face_square = str(face[2]),str(face[3]),str(face[4]),str(face[4])
+            face_square = str(face[2]),str(face[3]),str(face[4]),str(face[5])
             profile = {
                 "mask": str(face[0]),
                 "probability": str(face[1]),
-                "face_square": face_square
+                "face_square": face_square,
             }
             profiles.append(profile)
-        return jsonify({"faces":profiles})
+        return jsonify({"faces":profiles,"image":image_path})
 
 '''
 if __name__ == "__main__":

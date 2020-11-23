@@ -22,8 +22,11 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 '''
-# import requests library
+
+# import requests and json library
 import requests
+import json
+
 # input url (flask server)
 url = "http://127.0.0.1:5000/predict"
 # select image path with mask or without mask
@@ -32,5 +35,6 @@ image_path = "example.png"
 files = {'file': open(image_path, 'rb')}
 # send POST request and keep the output
 r = requests.post(url, files=files)
-# print the output
-print(r.content)
+# convert response to json and print it
+j = json.loads(r.content)
+print(j)
